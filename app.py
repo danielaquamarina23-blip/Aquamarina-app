@@ -1,610 +1,363 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aquamarina Travels — Generador de Documentos</title>
-<style>
-  :root {
-    --azul:      #1a3a5c;
-    --azul-med:  #1e5f8e;
-    --aqua:      #00b4d8;
-    --aqua-soft: #90e0ef;
-    --blanco:    #f8fafc;
-    --gris:      #e2e8f0;
-    --gris-t:    #64748b;
-    --rojo:      #e53e3e;
-    --verde:     #2d6a4f;
-    --radio:     10px;
-    --sombra:    0 4px 24px rgba(0,0,0,.10);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: linear-gradient(135deg, #e8f4fd 0%, #f0fafa 100%);
-    min-height: 100vh;
-    color: #1e293b;
-  }
+import os
+import io
+import copy
+import shutil
+import tempfile
+import subprocess
+from datetime import datetime
+from pathlib import Path
 
-  /* ─── Header ─── */
-  header {
-    background: var(--azul);
-    color: #fff;
-    padding: 18px 32px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.25);
-  }
-  header .logo {
-    width: 52px; height: 52px;
-    background: var(--aqua);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 900; color: var(--azul);
-    letter-spacing: -1px;
-  }
-  header h1 { font-size: 1.4rem; font-weight: 700; }
-  header p  { font-size: .85rem; opacity: .75; margin-top: 2px; }
+from flask import Flask, request, send_file, jsonify, render_template
+from docx import Document
+from docx.shared import Pt
+import openpyxl
+from num2words import num2words
 
-  /* ─── Layout ─── */
-  main {
-    max-width: 960px;
-    margin: 32px auto;
-    padding: 0 20px 60px;
-  }
+app = Flask(__name__)
 
-  /* ─── Secciones ─── */
-  .card {
-    background: #fff;
-    border-radius: var(--radio);
-    box-shadow: var(--sombra);
-    margin-bottom: 24px;
-    overflow: hidden;
-  }
-  .card-header {
-    background: var(--azul);
-    color: #fff;
-    padding: 14px 22px;
-    font-size: .95rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .card-header .icon {
-    background: var(--aqua);
-    color: var(--azul);
-    border-radius: 6px;
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 900;
-  }
-  .card-body { padding: 22px; }
+BASE_DIR = Path(__file__).parent
+CONT_TEMPLATE = BASE_DIR / "CONT_plantilla.docx"
+LIQUI_TEMPLATE = BASE_DIR / "LIQUI_plantilla.xlsx"
 
-  /* ─── Grid campos ─── */
-  .grid { display: grid; gap: 16px; }
-  .grid-2 { grid-template-columns: 1fr 1fr; }
-  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
-  @media(max-width:640px){
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-  }
 
-  /* ─── Campos ─── */
-  .field { display: flex; flex-direction: column; gap: 5px; }
-  label { font-size: .82rem; font-weight: 600; color: var(--gris-t); text-transform: uppercase; letter-spacing: .04em; }
-  input, select, textarea {
-    border: 1.5px solid var(--gris);
-    border-radius: 7px;
-    padding: 9px 12px;
-    font-size: .95rem;
-    color: #1e293b;
-    transition: border-color .2s, box-shadow .2s;
-    background: var(--blanco);
-  }
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--aqua);
-    box-shadow: 0 0 0 3px rgba(0,180,216,.15);
-  }
-  textarea { resize: vertical; min-height: 70px; }
-  .required::after { content: " *"; color: var(--rojo); }
+# ──────────────────────────────────────────────
+# Helpers
+# ──────────────────────────────────────────────
 
-  /* ─── Pasajeros ─── */
-  .pax-list { display: flex; flex-direction: column; gap: 10px; }
-  .pax-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 10px;
-    align-items: end;
-  }
-  .btn-remove {
-    background: #fee2e2;
-    border: none; border-radius: 7px;
-    color: var(--rojo);
-    padding: 9px 13px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background .15s;
-  }
-  .btn-remove:hover { background: #fca5a5; }
-  #btn-add-pax {
-    margin-top: 10px;
-    background: #eff6ff;
-    border: 1.5px dashed var(--azul-med);
-    border-radius: 7px;
-    color: var(--azul-med);
-    padding: 9px 18px;
-    cursor: pointer;
-    font-size: .9rem;
-    font-weight: 600;
-    transition: background .15s;
-  }
-  #btn-add-pax:hover { background: #dbeafe; }
+def pesos_en_letras(valor: float) -> str:
+    """Convierte número a letras en español (pesos colombianos)."""
+    try:
+        entero = int(valor)
+        letras = num2words(entero, lang="es").upper()
+        return f"{letras} PESOS M/CTE"
+    except Exception:
+        return ""
 
-  /* ─── Acciones ─── */
-  .actions {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-top: 28px;
-  }
-  .btn {
-    flex: 1;
-    min-width: 200px;
-    padding: 14px 24px;
-    border: none;
-    border-radius: var(--radio);
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: transform .15s, box-shadow .15s, opacity .15s;
-  }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.15); }
-  .btn:active { transform: translateY(0); }
-  .btn-contrato {
-    background: linear-gradient(135deg, var(--azul) 0%, var(--azul-med) 100%);
-    color: #fff;
-  }
-  .btn-liquidacion {
-    background: linear-gradient(135deg, #0d7a5f 0%, #2d9d79 100%);
-    color: #fff;
-  }
-  .btn-ambos {
-    background: linear-gradient(135deg, var(--aqua) 0%, #0096c7 100%);
-    color: var(--azul);
-    flex: 100%;
-  }
-  .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 
-  /* ─── Toast ─── */
-  #toast {
-    position: fixed;
-    bottom: 28px; left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--verde);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: .95rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,.2);
-    transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-    z-index: 999;
-    white-space: nowrap;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
+def replace_in_paragraph(paragraph, replacements: dict):
+    """Reemplaza marcadores en un párrafo preservando formato."""
+    for key, val in replacements.items():
+        for run in paragraph.runs:
+            if key in run.text:
+                run.text = run.text.replace(key, str(val))
+        # Si el marcador quedó partido entre runs, reconstruir texto del párrafo
+        full = "".join(r.text for r in paragraph.runs)
+        if key in full:
+            full_replaced = full.replace(key, str(val))
+            for i, run in enumerate(paragraph.runs):
+                run.text = full_replaced if i == 0 else ""
 
-  /* ─── Nota del valor ─── */
-  .valor-nota {
-    font-size: .8rem;
-    color: var(--gris-t);
-    margin-top: 4px;
-  }
-  .letras-preview {
-    font-size: .82rem;
-    color: var(--azul-med);
-    font-style: italic;
-    min-height: 18px;
-    margin-top: 2px;
-  }
-  .separador {
-    border: none;
-    border-top: 1.5px solid var(--gris);
-    margin: 18px 0;
-  }
-</style>
-</head>
-<body>
 
-<header>
-  <div class="logo">AT</div>
-  <div>
-    <h1>Aquamarina Travels</h1>
-    <p>Generador de Contratos y Liquidaciones — NIT 79489739-9</p>
-  </div>
-</header>
+def replace_in_doc(doc: Document, replacements: dict):
+    """Reemplaza en todos los párrafos y tablas del documento."""
+    for para in doc.paragraphs:
+        replace_in_paragraph(para, replacements)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for para in cell.paragraphs:
+                    replace_in_paragraph(para, replacements)
 
-<main>
 
-  <!-- 1. Datos del titular -->
-  <div class="card">
-    <div class="card-header">
-      <div class="icon">1</div>
-      Datos del Titular de la Reserva
-    </div>
-    <div class="card-body">
-      <div class="grid grid-2">
-        <div class="field">
-          <label class="required" for="titular">Nombre completo</label>
-          <input type="text" id="titular" placeholder="Nombres y apellidos completos">
-        </div>
-        <div class="field">
-          <label class="required" for="documento">N° de identificación</label>
-          <input type="text" id="documento" placeholder="CC / CE / Pasaporte">
-        </div>
-        <div class="field">
-          <label for="celular">Celular</label>
-          <input type="text" id="celular" placeholder="3XX XXX XXXX">
-        </div>
-        <div class="field">
-          <label for="correo">Correo electrónico</label>
-          <input type="email" id="correo" placeholder="correo@ejemplo.com">
-        </div>
-        <div class="field">
-          <label for="asesor">Asesor</label>
-          <input type="text" id="asesor" placeholder="Nombre del asesor" value="Yamile Segura">
-        </div>
-        <div class="field">
-          <label for="fecha_rsv">Fecha de reserva</label>
-          <input type="date" id="fecha_rsv">
-        </div>
-      </div>
-    </div>
-  </div>
+def docx_to_pdf(docx_path: Path) -> Path:
+    """Convierte docx a PDF usando LibreOffice."""
+    out_dir = docx_path.parent
+    env = os.environ.copy()
+    env["SAL_USE_VCLPLUGIN"] = "svp"
+    subprocess.run(
+        ["soffice", "--headless", "--convert-to", "pdf", "--outdir", str(out_dir), str(docx_path)],
+        env=env, check=True, capture_output=True, timeout=60
+    )
+    return docx_path.with_suffix(".pdf")
 
-  <!-- 2. Servicios contratados -->
-  <div class="card">
-    <div class="card-header">
-      <div class="icon">2</div>
-      Servicios Contratados
-    </div>
-    <div class="card-body">
-      <div class="grid grid-2">
-        <div class="field">
-          <label class="required" for="origen">Ciudad de origen</label>
-          <input type="text" id="origen" placeholder="Ej: Bogotá" value="Bogotá">
-        </div>
-        <div class="field">
-          <label class="required" for="destino">Ciudad de destino</label>
-          <input type="text" id="destino" placeholder="Ej: Cartagena">
-        </div>
-        <div class="field">
-          <label class="required" for="fecha_ida">Fecha de ida</label>
-          <input type="date" id="fecha_ida">
-        </div>
-        <div class="field">
-          <label class="required" for="fecha_regreso">Fecha de regreso</label>
-          <input type="date" id="fecha_regreso">
-        </div>
-        <div class="field">
-          <label for="noches">N° de noches</label>
-          <input type="number" id="noches" min="1" placeholder="5">
-        </div>
-        <div class="field">
-          <label class="required" for="hotel">Hotel seleccionado</label>
-          <input type="text" id="hotel" placeholder="Nombre del hotel">
-        </div>
-      </div>
 
-      <hr class="separador">
+def xlsx_to_pdf(xlsx_path: Path) -> Path:
+    """Convierte xlsx a PDF usando LibreOffice."""
+    out_dir = xlsx_path.parent
+    env = os.environ.copy()
+    env["SAL_USE_VCLPLUGIN"] = "svp"
+    subprocess.run(
+        ["soffice", "--headless", "--convert-to", "pdf", "--outdir", str(out_dir), str(xlsx_path)],
+        env=env, check=True, capture_output=True, timeout=60
+    )
+    return xlsx_path.with_suffix(".pdf")
 
-      <div class="grid grid-3">
-        <div class="field">
-          <label for="adultos">Adultos</label>
-          <input type="number" id="adultos" min="0" value="2">
-        </div>
-        <div class="field">
-          <label for="ninos">Niños (2–11 años)</label>
-          <input type="number" id="ninos" min="0" value="0">
-        </div>
-        <div class="field">
-          <label for="infantes">Infantes (0–23 meses)</label>
-          <input type="number" id="infantes" min="0" value="0">
-        </div>
-      </div>
 
-      <hr class="separador">
+# ──────────────────────────────────────────────
+# Rutas
+# ──────────────────────────────────────────────
 
-      <div class="grid grid-2">
-        <div class="field">
-          <label for="acomodacion">Acomodación</label>
-          <select id="acomodacion">
-            <option value="Sencilla">Sencilla</option>
-            <option value="Doble" selected>Doble</option>
-            <option value="Triple">Triple</option>
-            <option value="Niño">Niño</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="tipo_vuelo">Tipo de vuelo</label>
-          <select id="tipo_vuelo">
-            <option value="Comercial" selected>Comercial</option>
-            <option value="Charter">Charter</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-  <!-- 3. Pasajeros -->
-  <div class="card">
-    <div class="card-header">
-      <div class="icon">3</div>
-      Lista de Pasajeros
-    </div>
-    <div class="card-body">
-      <div class="pax-list" id="pax-list">
-        <!-- se genera dinámicamente -->
-      </div>
-      <button id="btn-add-pax" type="button">+ Agregar pasajero</button>
-    </div>
-  </div>
 
-  <!-- 4. Valores -->
-  <div class="card">
-    <div class="card-header">
-      <div class="icon">4</div>
-      Condiciones Económicas
-    </div>
-    <div class="card-body">
-      <div class="grid grid-2">
-        <div class="field">
-          <label class="required" for="valor_total">Valor total del contrato ($)</label>
-          <input type="number" id="valor_total" min="0" step="1000" placeholder="0" oninput="actualizarLetras()">
-          <div class="letras-preview" id="valor_letras"></div>
-        </div>
-        <div class="field">
-          <label for="cuota_inicial">Cuota inicial (30%)</label>
-          <input type="number" id="cuota_inicial" min="0" step="1000" placeholder="0">
-          <div class="valor-nota">Se calcula automáticamente al ingresar el total</div>
-        </div>
-        <div class="field">
-          <label for="num_cuotas">Número de cuotas</label>
-          <input type="number" id="num_cuotas" min="1" value="1" oninput="calcularCuota()">
-        </div>
-        <div class="field">
-          <label for="valor_cuota">Valor por cuota</label>
-          <input type="number" id="valor_cuota" min="0" step="1000" placeholder="0" readonly>
-        </div>
-      </div>
-    </div>
-  </div>
+@app.route("/contrato", methods=["POST"])
+def generar_contrato():
+    """Genera el contrato Word/PDF con los datos del formulario."""
+    data = request.json or {}
 
-  <!-- Botones -->
-  <div class="actions">
-    <button class="btn btn-contrato" onclick="descargar('contrato')">
-      📄 Descargar Contrato (.pdf)
-    </button>
-    <button class="btn btn-liquidacion" onclick="descargar('liquidacion')">
-      📊 Descargar Liquidación (.pdf)
-    </button>
-    <button class="btn btn-ambos" onclick="descargarAmbos()">
-      ⚡ Generar los Dos PDFs
-    </button>
-  </div>
+    nombre_titular    = data.get("nombre_titular", "")
+    doc_titular       = data.get("doc_titular", "")
+    celular           = data.get("celular", "")
+    correo            = data.get("correo", "")
+    hotel             = data.get("hotel", "")
+    origen            = data.get("origen", "")
+    destino           = data.get("destino", "")
+    fecha_salida      = data.get("fecha_salida", "")
+    fecha_regreso     = data.get("fecha_regreso", "")
+    total_noches      = data.get("total_noches", "")
+    adultos           = data.get("adultos", 0)
+    ninos             = data.get("ninos", 0)
+    infantes          = data.get("infantes", 0)
+    acomodacion       = data.get("acomodacion", "")
+    pasajeros         = data.get("pasajeros", [])   # lista de {nombre, documento}
+    tarifa_total      = float(data.get("tarifa_total", 0))
+    cuota_inicial     = float(data.get("cuota_inicial", 0))
+    num_cuotas        = data.get("num_cuotas", "")
+    valor_cuota       = float(data.get("valor_cuota", 0))
+    asesor            = data.get("asesor", "")
+    num_rsv           = data.get("num_rsv", "")
+    fmt_salida        = data.get("fmt_salida", fecha_salida)
+    fmt_regreso       = data.get("fmt_regreso", fecha_regreso)
+    output_format     = data.get("formato", "pdf")   # "pdf" o "docx"
 
-</main>
+    tarifa_letras = pesos_en_letras(tarifa_total)
 
-<div id="toast">✅ Documento generado con éxito</div>
+    # Tabla de pasajeros: construir texto
+    pasajeros_texto = ""
+    for p in pasajeros:
+        pasajeros_texto += f"{p.get('nombre','')} — {p.get('documento','')}\n"
 
-<script>
-// ── Número a letras (preview) ─────────────────────────────────────────────
-const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve',
-  'diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve'];
-const decenas  = ['','diez','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
-
-function numLetras(n) {
-  n = parseInt(n) || 0;
-  if (n === 0) return 'cero';
-  if (n < 0) return 'menos ' + numLetras(-n);
-  let r = '';
-  if (n >= 1000000) {
-    const m = Math.floor(n / 1000000);
-    r += (m === 1 ? 'un millón' : numLetras(m) + ' millones') + ' ';
-    n %= 1000000;
-  }
-  if (n >= 1000) {
-    const m = Math.floor(n / 1000);
-    r += (m === 1 ? 'mil' : numLetras(m) + ' mil') + ' ';
-    n %= 1000;
-  }
-  if (n >= 100) {
-    const c = Math.floor(n / 100);
-    const cMap = ['','cien','doscientos','trescientos','cuatrocientos','quinientos',
-      'seiscientos','setecientos','ochocientos','novecientos'];
-    if (n === 100) { r += 'cien'; n = 0; }
-    else { r += cMap[c] + ' '; n %= 100; }
-  }
-  if (n > 0) {
-    if (n < 20) { r += unidades[n]; }
-    else {
-      r += decenas[Math.floor(n/10)];
-      if (n % 10) r += ' y ' + unidades[n % 10];
+    replacements = {
+        "{{NOMBRE_TITULAR}}":  nombre_titular,
+        "{{DOC_TITULAR}}":     doc_titular,
+        "{{CELULAR}}":         celular,
+        "{{CORREO}}":          correo,
+        "{{HOTEL}}":           hotel,
+        "{{ORIGEN}}":          origen,
+        "{{DESTINO}}":         destino,
+        "{{FECHA_SALIDA}}":    fmt_salida,
+        "{{FECHA_REGRESO}}":   fmt_regreso,
+        "{{TOTAL_NOCHES}}":    total_noches,
+        "{{ADULTOS}}":         adultos,
+        "{{NINOS}}":           ninos,
+        "{{INFANTES}}":        infantes,
+        "{{ACOMODACION}}":     acomodacion,
+        "{{TARIFA_LETRAS}}":   tarifa_letras,
+        "{{TARIFA_TOTAL}}":    f"${tarifa_total:,.0f}",
+        "{{CUOTA_INICIAL}}":   f"${cuota_inicial:,.0f}",
+        "{{NUM_CUOTAS}}":      num_cuotas,
+        "{{VALOR_CUOTA}}":     f"${valor_cuota:,.0f}",
+        "{{ASESOR}}":          asesor,
+        "{{NUM_RSV}}":         num_rsv,
+        "MIL PESOS ($)":       tarifa_letras,   # reemplaza placeholder en cláusula 3
     }
-  }
-  return r.trim().replace(/\s+/g,' ');
-}
 
-function actualizarLetras() {
-  const v = parseFloat(document.getElementById('valor_total').value) || 0;
-  document.getElementById('valor_letras').textContent = v > 0
-    ? numLetras(v).toUpperCase() + ' PESOS M/CTE'
-    : '';
-  // Auto cuota inicial 30%
-  const ci = document.getElementById('cuota_inicial');
-  if (!ci.dataset.manual) ci.value = Math.round(v * 0.3);
-  calcularCuota();
-}
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        docx_out = tmp / f"Contrato_{nombre_titular.replace(' ','_')}_{num_rsv}.docx"
+        shutil.copy(CONT_TEMPLATE, docx_out)
 
-function calcularCuota() {
-  const total   = parseFloat(document.getElementById('valor_total').value)    || 0;
-  const inicial = parseFloat(document.getElementById('cuota_inicial').value) || 0;
-  const cuotas  = parseInt(document.getElementById('num_cuotas').value)       || 1;
-  const saldo   = total - inicial;
-  document.getElementById('valor_cuota').value = cuotas > 0 ? Math.round(saldo / cuotas) : 0;
-}
+        doc = Document(docx_out)
+        replace_in_doc(doc, replacements)
 
-document.getElementById('cuota_inicial').addEventListener('input', function() {
-  this.dataset.manual = '1';
-  calcularCuota();
-});
+        # Llenar tabla de pasajeros
+        for table in doc.tables:
+            headers = [c.text.strip() for c in table.rows[0].cells]
+            if "NOMBRE Y APELLIDOS COMPLETOS" in headers or any("PASAJEROS" in h for h in headers):
+                # Encontrar fila de encabezado de datos
+                for row in table.rows:
+                    texts = [c.text.strip() for c in row.cells]
+                    if "NOMBRE Y APELLIDOS COMPLETOS" in texts:
+                        # Insertar pasajeros después de esta fila
+                        idx = list(table.rows).index(row)
+                        for i, p in enumerate(pasajeros):
+                            try:
+                                target_row = table.rows[idx + 1 + i]
+                                target_row.cells[0].text = p.get("nombre", "")
+                                target_row.cells[-1].text = p.get("documento", "")
+                            except IndexError:
+                                pass
+                        break
 
-// ── Pasajeros ─────────────────────────────────────────────────────────────
-let paxCount = 0;
+        doc.save(docx_out)
 
-function agregarPasajero(nombre='', doc='') {
-  paxCount++;
-  const div = document.createElement('div');
-  div.className = 'pax-row';
-  div.dataset.id = paxCount;
-  div.innerHTML = `
-    <div class="field">
-      <label>Pasajero ${paxCount} — Nombre completo</label>
-      <input type="text" class="pax-nombre" value="${nombre}" placeholder="Nombres y apellidos">
-    </div>
-    <div class="field">
-      <label>N° Documento</label>
-      <input type="text" class="pax-doc" value="${doc}" placeholder="Documento de identidad">
-    </div>
-    <button class="btn-remove" onclick="this.parentElement.remove(); recontarPax()" title="Eliminar">✕</button>
-  `;
-  document.getElementById('pax-list').appendChild(div);
-}
+        if output_format == "docx":
+            buf = io.BytesIO(docx_out.read_bytes())
+            buf.seek(0)
+            return send_file(
+                buf,
+                mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                as_attachment=True,
+                download_name=docx_out.name
+            )
 
-function recontarPax() {
-  document.querySelectorAll('.pax-row').forEach((row, i) => {
-    row.querySelector('label').textContent = `Pasajero ${i+1} — Nombre completo`;
-  });
-}
+        # Convertir a PDF
+        pdf_out = docx_to_pdf(docx_out)
+        buf = io.BytesIO(pdf_out.read_bytes())
+        buf.seek(0)
+        return send_file(
+            buf,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"Contrato_{nombre_titular.replace(' ','_')}_{num_rsv}.pdf"
+        )
 
-document.getElementById('btn-add-pax').addEventListener('click', () => agregarPasajero());
 
-// Inicializar con 2 pasajeros
-agregarPasajero();
-agregarPasajero();
+@app.route("/liquidacion", methods=["POST"])
+def generar_liquidacion():
+    """Rellena la plantilla XLSX de liquidación y la devuelve como PDF o XLSX."""
+    data = request.json or {}
 
-// Fecha de reserva: hoy
-document.getElementById('fecha_rsv').valueAsDate = new Date();
+    num_rsv_h        = data.get("num_rsv_h", "")
+    num_rsv_v        = data.get("num_rsv_v", "")
+    nombre_titular   = data.get("nombre_titular", "")
+    doc_titular      = data.get("doc_titular", "")
+    celular          = data.get("celular", "")
+    correo           = data.get("correo", "")
+    ciudad           = data.get("ciudad", "")
+    fecha_rsv        = data.get("fecha_rsv", "")
+    asesor           = data.get("asesor", "")
+    origen           = data.get("origen", "")
+    destino          = data.get("destino", "")
+    fecha_ida        = data.get("fecha_ida", "")
+    fecha_regreso    = data.get("fecha_regreso", "")
+    hotel            = data.get("hotel", "")
+    noches           = data.get("noches", 0)
+    tipo_vuelo       = data.get("tipo_vuelo", "Comercial")
+    adultos          = int(data.get("adultos", 0))
+    ninos            = int(data.get("ninos", 0))
+    infantes         = int(data.get("infantes", 0))
+    acomodacion      = data.get("acomodacion", "DOBLE")  # SENCILLA/DOBLE/TRIPLE
+    tarifa_sencilla  = float(data.get("tarifa_sencilla", 0))
+    tarifa_doble     = float(data.get("tarifa_doble", 0))
+    tarifa_triple    = float(data.get("tarifa_triple", 0))
+    tarifa_nino      = float(data.get("tarifa_nino", 0))
+    tarifa_infante   = float(data.get("tarifa_infante", 0))
+    cant_sencilla    = int(data.get("cant_sencilla", 0))
+    cant_doble       = int(data.get("cant_doble", 0))
+    cant_triple      = int(data.get("cant_triple", 0))
+    cant_nino        = int(data.get("cant_nino", 0))
+    cant_infante     = int(data.get("cant_infante", 0))
+    tours            = [float(x) for x in data.get("tours", [0, 0, 0, 0, 0])]
+    asistencia       = [float(x) for x in data.get("asistencia", [0, 0, 0, 0, 0])]
+    equipaje         = [float(x) for x in data.get("equipaje", [0, 0, 0, 0, 0])]
+    cuota_inicial    = float(data.get("cuota_inicial", 0))
+    num_cuotas       = int(data.get("num_cuotas", 1))
+    output_format    = data.get("formato", "pdf")
 
-// ── Recopilar datos ────────────────────────────────────────────────────────
-function recopilarDatos() {
-  const pasajeros = [];
-  document.querySelectorAll('.pax-row').forEach(row => {
-    const nombre = row.querySelector('.pax-nombre').value.trim();
-    const doc    = row.querySelector('.pax-doc').value.trim();
-    if (nombre) pasajeros.push({ nombre, doc });
-  });
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        xlsx_out = tmp / f"Liquidacion_{nombre_titular.replace(' ','_')}_{num_rsv_h}.xlsx"
+        shutil.copy(LIQUI_TEMPLATE, xlsx_out)
 
-  return {
-    titular:       document.getElementById('titular').value.trim(),
-    documento:     document.getElementById('documento').value.trim(),
-    celular:       document.getElementById('celular').value.trim(),
-    correo:        document.getElementById('correo').value.trim(),
-    asesor:        document.getElementById('asesor').value.trim(),
-    fecha_rsv:     document.getElementById('fecha_rsv').value,
-    origen:        document.getElementById('origen').value.trim(),
-    destino:       document.getElementById('destino').value.trim(),
-    fecha_ida:     document.getElementById('fecha_ida').value,
-    fecha_regreso: document.getElementById('fecha_regreso').value,
-    noches:        document.getElementById('noches').value,
-    hotel:         document.getElementById('hotel').value.trim(),
-    adultos:       document.getElementById('adultos').value,
-    ninos:         document.getElementById('ninos').value,
-    infantes:      document.getElementById('infantes').value,
-    acomodacion:   document.getElementById('acomodacion').value,
-    tipo_vuelo:    document.getElementById('tipo_vuelo').value,
-    valor_total:   document.getElementById('valor_total').value,
-    cuota_inicial: document.getElementById('cuota_inicial').value,
-    num_cuotas:    document.getElementById('num_cuotas').value,
-    valor_cuota:   document.getElementById('valor_cuota').value,
-    pasajeros
-  };
-}
+        wb = openpyxl.load_workbook(xlsx_out)
+        ws = wb.active  # Hoja CONFIRMACION
 
-function validar(datos) {
-  if (!datos.titular) { alert('⚠️ Por favor ingresa el nombre del titular.'); return false; }
-  if (!datos.documento) { alert('⚠️ Por favor ingresa el documento del titular.'); return false; }
-  if (!datos.destino) { alert('⚠️ Por favor ingresa el destino.'); return false; }
-  return true;
-}
+        # Mapeo de celdas según estructura de la plantilla
+        cell_map = {
+            "H1":  num_rsv_h,
+            "H2":  num_rsv_v,
+            "D5":  "Yamile Segura",       # Director (fijo)
+            "D6":  asesor,
+            "D7":  fecha_rsv,
+            "H7":  ciudad,
+            "D9":  nombre_titular,
+            "D10": doc_titular,
+            "D11": "",                     # dirección (opcional)
+            "H9":  celular,
+            "H10": "",                     # tel alternativo
+            "H11": correo,
+            "D13": origen,
+            "H13": destino,
+            "D14": fecha_ida,
+            "H14": fecha_regreso,
+            "D15": adultos,
+            "F15": ninos,
+            "H15": infantes,
+            "D16": hotel,
+            "F17": noches,
+            "H17": tipo_vuelo,
+            # Cantidades acomodación
+            "D19": cant_sencilla,
+            "E19": cant_doble,
+            "F19": cant_triple,
+            "G19": cant_nino,
+            "H19": cant_infante,
+            # Tarifas
+            "D21": tarifa_sencilla,
+            "E21": tarifa_doble,
+            "F21": tarifa_triple,
+            "G21": tarifa_nino,
+            "H21": tarifa_infante,
+            # Tours
+            "D22": tours[0] if len(tours) > 0 else 0,
+            "E22": tours[1] if len(tours) > 1 else 0,
+            "F22": tours[2] if len(tours) > 2 else 0,
+            "G22": tours[3] if len(tours) > 3 else 0,
+            "H22": tours[4] if len(tours) > 4 else 0,
+            # Asistencia médica
+            "D23": asistencia[0] if len(asistencia) > 0 else 0,
+            "E23": asistencia[1] if len(asistencia) > 1 else 0,
+            "F23": asistencia[2] if len(asistencia) > 2 else 0,
+            "G23": asistencia[3] if len(asistencia) > 3 else 0,
+            "H23": asistencia[4] if len(asistencia) > 4 else 0,
+            # Equipaje
+            "D24": equipaje[0] if len(equipaje) > 0 else 0,
+            "E24": equipaje[1] if len(equipaje) > 1 else 0,
+            "F24": equipaje[2] if len(equipaje) > 2 else 0,
+            "H24": equipaje[4] if len(equipaje) > 4 else 0,
+            # Cantidades de personas
+            "D25": cant_sencilla,
+            "E25": cant_doble,
+            "F25": cant_triple,
+            "G25": cant_nino,
+            "H25": cant_infante,
+        }
 
-// ── Descarga ───────────────────────────────────────────────────────────────
-async function descargar(tipo) {
-  const datos = recopilarDatos();
-  if (!validar(datos)) return;
+        for cell_ref, val in cell_map.items():
+            ws[cell_ref] = val
 
-  const url = tipo === 'contrato' ? '/contrato' : '/liquidacion';
-  const btn = document.querySelectorAll('.btn')[tipo === 'contrato' ? 0 : 1];
-  btn.disabled = true;
-  btn.textContent = '⏳ Generando...';
+        # Calcular totales para campo en letras (fila 28)
+        total = (
+            tarifa_sencilla * cant_sencilla +
+            tarifa_doble    * cant_doble +
+            tarifa_triple   * cant_triple +
+            tarifa_nino     * cant_nino +
+            tarifa_infante  * cant_infante
+        )
+        ws["D28"] = pesos_en_letras(total)
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datos)
-    });
-    if (!res.ok) throw new Error('Error en el servidor');
-    const blob = await res.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = res.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1]
-      || (tipo === 'contrato' ? 'contrato.pdf' : 'liquidacion.pdf');
-    a.click();
-    mostrarToast(`✅ ${tipo === 'contrato' ? 'Contrato' : 'Liquidación'} descargado`);
-  } catch(e) {
-    alert('Error generando el documento: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = tipo === 'contrato' ? '📄 Descargar Contrato (.pdf)' : '📊 Descargar Liquidación (.pdf)';
-  }
-}
+        # Acuerdo de pagos (fila 30)
+        saldo = total - cuota_inicial
+        valor_cuota_calc = saldo / num_cuotas if num_cuotas > 0 else saldo
+        ws["D30"] = cuota_inicial
+        ws["F30"] = num_cuotas
+        ws["H30"] = saldo
 
-async function descargarAmbos() {
-  const datos = recopilarDatos();
-  if (!validar(datos)) return;
-  const btn = document.querySelector('.btn-ambos');
-  btn.disabled = true;
-  btn.textContent = '⏳ Generando documentos...';
-  try {
-    await Promise.all([
-      fetch('/contrato',    { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
-        .then(r => r.blob()).then(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Contrato_'+datos.titular+'.docx'; a.click(); }),
-      new Promise(r => setTimeout(r, 600)).then(() =>
-        fetch('/liquidacion', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
-          .then(r => r.blob()).then(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Liquidacion_'+datos.titular+'.xlsx'; a.click(); })
-      )
-    ]);
-    mostrarToast('✅ Ambos documentos generados');
-  } catch(e) {
-    alert('Error: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '⚡ Generar los Dos PDFs';
-  }
-}
+        wb.save(xlsx_out)
 
-function mostrarToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-</script>
-</body>
-</html>
+        if output_format == "xlsx":
+            buf = io.BytesIO(xlsx_out.read_bytes())
+            buf.seek(0)
+            return send_file(
+                buf,
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                as_attachment=True,
+                download_name=xlsx_out.name
+            )
+
+        pdf_out = xlsx_to_pdf(xlsx_out)
+        buf = io.BytesIO(pdf_out.read_bytes())
+        buf.seek(0)
+        return send_file(
+            buf,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"Liquidacion_{nombre_titular.replace(' ','_')}_{num_rsv_h}.pdf"
+        )
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
