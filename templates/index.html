@@ -548,7 +548,7 @@ async function descargar(tipo) {
   const datos = recopilarDatos();
   if (!validar(datos)) return;
 
-  const url = tipo === 'contrato' ? '/generar_contrato' : '/generar_liquidacion';
+  const url = tipo === 'contrato' ? '/contrato' : '/liquidacion';
   const btn = document.querySelectorAll('.btn')[tipo === 'contrato' ? 0 : 1];
   btn.disabled = true;
   btn.textContent = '⏳ Generando...';
@@ -583,10 +583,10 @@ async function descargarAmbos() {
   btn.textContent = '⏳ Generando documentos...';
   try {
     await Promise.all([
-      fetch('/generar_contrato',    { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
+      fetch('/contrato',    { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
         .then(r => r.blob()).then(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Contrato_'+datos.titular+'.docx'; a.click(); }),
       new Promise(r => setTimeout(r, 600)).then(() =>
-        fetch('/generar_liquidacion', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
+        fetch('/liquidacion', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
           .then(r => r.blob()).then(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Liquidacion_'+datos.titular+'.xlsx'; a.click(); })
       )
     ]);
