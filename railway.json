@@ -1,5 +1,11 @@
-flask==3.0.3
-python-docx==1.1.2
-openpyxl==3.1.5
-num2words==0.5.13
-gunicorn==22.0.0
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE"
+  },
+  "deploy": {
+    "startCommand": "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120",
+    "healthcheckPath": "/",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
