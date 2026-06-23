@@ -27,7 +27,6 @@ def pesos_en_letras(valor: float) -> str:
 
 
 def fmt_fecha(iso: str) -> str:
-    """2026-07-04  →  4 de julio de 2026"""
     if not iso:
         return ""
     try:
@@ -73,7 +72,8 @@ def fill_contrato(doc: Document, d: dict):
     set_cell(uc(2)[1], f"CORREO ELECTRONICO: {d['correo']}")
     set_cell(uc(3)[0], f"HOTEL: {d['hotel']}")
     set_cell(uc(3)[1], f"ORIGEN: {d['origen']}")
-    set_cell(uc(3)[2], f"DESTINO: {d['destino']}")
+    if len(uc(3)) > 2:
+        set_cell(uc(3)[2], f"DESTINO: {d['destino']}")
     set_cell(uc(4)[0], f"ADULTOS: {d['adultos']}")
     set_cell(uc(4)[1], f"FECHA DE SALIDA: {fmt_fecha(d['fecha_ida'])}")
     set_cell(uc(5)[0], f"NIÑOS 2-11 AÑOS: {d['ninos']}")
@@ -98,6 +98,14 @@ def fill_contrato(doc: Document, d: dict):
         set_cell(uc(20)[2], f"NUMERO CUOTAS: {d.get('num_cuotas','')}")
     if len(uc(21)) >= 3:
         set_cell(uc(21)[2], f"VALOR CUOTA: ${float(d.get('valor_cuota',0) or 0):,.0f}")
+
+
+def safe_set(ws, cell_ref, value):
+    """Escribe solo en celdas no fusionadas (celda principal del merge)."""
+    cell = ws[cell_ref]
+    if cell.__class__.__name__ == 'MergedCell':
+        return  # saltar celdas secundarias de un merge
+    cell.value = value
 
 
 def run_soffice(args):
@@ -174,51 +182,77 @@ def generar_liquidacion():
         wb = openpyxl.load_workbook(xlsx_out)
         ws = wb.active
 
+        # Usando celdas principales de los rangos fusionados
         cell_map = {
-            "D5":  "Yamile Segura",
+            "G1":  d.get("num_rsv_h", ""),
+            "G2":  d.get("num_rsv_v", ""),
             "D6":  d.get("asesor", ""),
+            "G6":  d.get("celular", ""),
             "D7":  fmt_fecha(d.get("fecha_rsv", "")),
+            "G7":  d.get("ciudad", ""),
             "D9":  d.get("titular", ""),
+            "G9":  d.get("celular", ""),
             "D10": d.get("documento", ""),
-            "H9":  d.get("celular", ""),
-            "H11": d.get("correo", ""),
+            "G11": d.get("correo", ""),
             "D13": d.get("origen", ""),
-            "H13": d.get("destino", ""),
+            "G13": d.get("destino", ""),
             "D14": fmt_fecha(d.get("fecha_ida", "")),
-            "H14": fmt_fecha(d.get("fecha_regreso", "")),
+            "G14": fmt_fecha(d.get("fecha_regreso", "")),
             "D15": int(d.get("adultos", 0) or 0),
             "F15": int(d.get("ninos", 0) or 0),
             "H15": int(d.get("infantes", 0) or 0),
             "D16": d.get("hotel", ""),
-            "F17": d.get("noches", 0),
-            "H17": d.get("tipo_vuelo", "Comercial"),
-            "D19": cant_sencilla, "E19": cant_doble,
-            "F19": cant_triple,   "G19": cant_nino, "H19": cant_infante,
-            "D21": tarifa_sencilla, "E21": tarifa_doble,
-            "F21": tarifa_triple,   "G21": tarifa_nino, "H21": tarifa_infante,
+            "E17": d.get("noches", 0),
+            "G17": d.get("tipo_vuelo", "Comercial"),
+            # Cantidades habitaciones
+            "D19": cant_sencilla,
+            "E19": cant_doble,
+            "F19": cant_triple,
+            "G19": cant_nino,
+            "H19": cant_infante,
+            # Tarifas por acomodación
+            "D21": tarifa_sencilla,
+            "E21": tarifa_doble,
+            "F21": tarifa_triple,
+            "G21": tarifa_nino,
+            "H21": tarifa_infante,
+            # Tours
             "D22": tours[0], "E22": tours[1], "F22": tours[2],
             "G22": tours[3], "H22": tours[4],
+            # Asistencia médica
             "D23": asistencia[0], "E23": asistencia[1], "F23": asistencia[2],
             "G23": asistencia[3], "H23": asistencia[4],
+            # Equipaje
             "D24": equipaje[0], "E24": equipaje[1],
             "F24": equipaje[2],  "H24": equipaje[4] if len(equipaje) > 4 else 0,
+            # Cantidad personas
             "D25": cant_sencilla, "E25": cant_doble,
             "F25": cant_triple,   "G25": cant_nino, "H25": cant_infante,
+            # Pagos
+            "D30": cuota_inicial,
+            "F30": num_cuotas,
         }
-        for ref, val in cell_map.items():
-            ws[ref] = val
 
+        for ref, val in cell_map.items():
+            safe_set(ws, ref, val)
+
+        # Total y letras
         total = (tarifa_sencilla*cant_sencilla + tarifa_doble*cant_doble +
                  tarifa_triple*cant_triple + tarifa_nino*cant_nino +
                  tarifa_infante*cant_infante)
-        # Si no hay tarifas por acomodación, usar valor_total del form
         if total == 0:
             total = float(d.get("valor_total", 0) or 0)
 
-        ws["D28"] = pesos_en_letras(total)
-        ws["D30"] = cuota_inicial
-        ws["F30"] = num_cuotas
-        ws["H30"] = total - cuota_inicial
+        safe_set(ws, "D28", pesos_en_letras(total))
+
+        # Pasajeros — filas 35 en adelante
+        pasajeros = d.get("pasajeros", [])
+        for i, p in enumerate(pasajeros[:10]):
+            fila = 36 + i
+            safe_set(ws, f"B{fila}", str(i+1))
+            safe_set(ws, f"C{fila}", p.get("nombre", ""))
+            safe_set(ws, f"D{fila}", "")
+            safe_set(ws, f"F{fila}", p.get("doc", ""))
 
         wb.save(xlsx_out)
 
