@@ -38,7 +38,7 @@ def fmt_fecha(iso: str) -> str:
         return iso
 
 
-def set_cell(cell, text: str):
+def set_cell_docx(cell, text: str):
     para = cell.paragraphs[0]
     if para.runs:
         run = para.runs[0]
@@ -60,52 +60,51 @@ def get_unique_cells(row):
     return unique
 
 
+def safe_set(ws, cell_ref, value):
+    cell = ws[cell_ref]
+    if cell.__class__.__name__ == 'MergedCell':
+        return
+    cell.value = value
+
+
 def fill_contrato(doc: Document, d: dict):
     table = doc.tables[0]
 
     def uc(idx):
         return get_unique_cells(table.rows[idx])
 
-    set_cell(uc(1)[0], f"NOMBRE TITULAR: {d['titular']}")
-    set_cell(uc(1)[1], f"No DOCUMENTO TITULAR RSV: {d['documento']}")
-    set_cell(uc(2)[0], f"NUMERO CELULAR: {d['celular']}")
-    set_cell(uc(2)[1], f"CORREO ELECTRONICO: {d['correo']}")
-    set_cell(uc(3)[0], f"HOTEL: {d['hotel']}")
-    set_cell(uc(3)[1], f"ORIGEN: {d['origen']}")
+    set_cell_docx(uc(1)[0], f"NOMBRE TITULAR: {d['titular']}")
+    set_cell_docx(uc(1)[1], f"No DOCUMENTO TITULAR RSV: {d['documento']}")
+    set_cell_docx(uc(2)[0], f"NUMERO CELULAR: {d['celular']}")
+    set_cell_docx(uc(2)[1], f"CORREO ELECTRONICO: {d['correo']}")
+    set_cell_docx(uc(3)[0], f"HOTEL: {d['hotel']}")
+    set_cell_docx(uc(3)[1], f"ORIGEN: {d['origen']}")
     if len(uc(3)) > 2:
-        set_cell(uc(3)[2], f"DESTINO: {d['destino']}")
-    set_cell(uc(4)[0], f"ADULTOS: {d['adultos']}")
-    set_cell(uc(4)[1], f"FECHA DE SALIDA: {fmt_fecha(d['fecha_ida'])}")
-    set_cell(uc(5)[0], f"NIÑOS 2-11 AÑOS: {d['ninos']}")
-    set_cell(uc(5)[1], f"FECHA DE REGRESO: {fmt_fecha(d['fecha_regreso'])}")
-    set_cell(uc(6)[0], f"INFANTES 0-23 MESES: {d['infantes']}")
-    set_cell(uc(6)[1], f"TOTAL NOCHES: {d['noches']}")
-    set_cell(uc(7)[0], f"ACOMODACION HABITACIONAL: {d['acomodacion']}")
+        set_cell_docx(uc(3)[2], f"DESTINO: {d['destino']}")
+    set_cell_docx(uc(4)[0], f"ADULTOS: {d['adultos']}")
+    set_cell_docx(uc(4)[1], f"FECHA DE SALIDA: {fmt_fecha(d['fecha_ida'])}")
+    set_cell_docx(uc(5)[0], f"NIÑOS 2-11 AÑOS: {d['ninos']}")
+    set_cell_docx(uc(5)[1], f"FECHA DE REGRESO: {fmt_fecha(d['fecha_regreso'])}")
+    set_cell_docx(uc(6)[0], f"INFANTES 0-23 MESES: {d['infantes']}")
+    set_cell_docx(uc(6)[1], f"TOTAL NOCHES: {d['noches']}")
+    set_cell_docx(uc(7)[0], f"ACOMODACION HABITACIONAL: {d['acomodacion']}")
 
     for i, p in enumerate(d.get("pasajeros", [])[:7]):
         cells = get_unique_cells(table.rows[10 + i])
-        set_cell(cells[0], p.get("nombre", ""))
-        set_cell(cells[1], p.get("doc", ""))
+        set_cell_docx(cells[0], p.get("nombre", ""))
+        set_cell_docx(cells[1], p.get("doc", ""))
 
     tarifa = float(d.get("valor_total", 0) or 0)
     cuota  = float(d.get("cuota_inicial", 0) or 0)
-    set_cell(uc(17)[0], f"TARIFA TOTAL EN LETRAS: {pesos_en_letras(tarifa)}")
-    set_cell(uc(17)[1], f"TARIFA EN NUMEROS: ${tarifa:,.0f}")
-    set_cell(uc(18)[0], f"TARIFA: ${tarifa:,.0f}")
+    set_cell_docx(uc(17)[0], f"TARIFA TOTAL EN LETRAS: {pesos_en_letras(tarifa)}")
+    set_cell_docx(uc(17)[1], f"TARIFA EN NUMEROS: ${tarifa:,.0f}")
+    set_cell_docx(uc(18)[0], f"TARIFA: ${tarifa:,.0f}")
     if len(uc(19)) >= 3:
-        set_cell(uc(19)[2], f"CUOTA INICIAL: ${cuota:,.0f}")
+        set_cell_docx(uc(19)[2], f"CUOTA INICIAL: ${cuota:,.0f}")
     if len(uc(20)) >= 3:
-        set_cell(uc(20)[2], f"NUMERO CUOTAS: {d.get('num_cuotas','')}")
+        set_cell_docx(uc(20)[2], f"NUMERO CUOTAS: {d.get('num_cuotas','')}")
     if len(uc(21)) >= 3:
-        set_cell(uc(21)[2], f"VALOR CUOTA: ${float(d.get('valor_cuota',0) or 0):,.0f}")
-
-
-def safe_set(ws, cell_ref, value):
-    """Escribe solo en celdas no fusionadas (celda principal del merge)."""
-    cell = ws[cell_ref]
-    if cell.__class__.__name__ == 'MergedCell':
-        return  # saltar celdas secundarias de un merge
-    cell.value = value
+        set_cell_docx(uc(21)[2], f"VALOR CUOTA: ${float(d.get('valor_cuota',0) or 0):,.0f}")
 
 
 def run_soffice(args):
@@ -159,20 +158,25 @@ def generar_liquidacion():
     nombre_safe = (d.get("titular") or "cliente").replace(" ", "_")
 
     tarifa_sencilla = float(d.get("tarifa_sencilla", 0) or 0)
-    tarifa_doble    = float(d.get("tarifa_doble", 0) or 0)
-    tarifa_triple   = float(d.get("tarifa_triple", 0) or 0)
-    tarifa_nino     = float(d.get("tarifa_nino", 0) or 0)
-    tarifa_infante  = float(d.get("tarifa_infante", 0) or 0)
-    cant_sencilla   = int(d.get("cant_sencilla", 0) or 0)
-    cant_doble      = int(d.get("cant_doble", 0) or 0)
-    cant_triple     = int(d.get("cant_triple", 0) or 0)
-    cant_nino       = int(d.get("cant_nino", 0) or 0)
-    cant_infante    = int(d.get("cant_infante", 0) or 0)
-    tours           = [float(x) for x in d.get("tours", [0]*5)]
+    tarifa_doble    = float(d.get("tarifa_doble",    0) or 0)
+    tarifa_triple   = float(d.get("tarifa_triple",   0) or 0)
+    tarifa_nino     = float(d.get("tarifa_nino",     0) or 0)
+    tarifa_infante  = float(d.get("tarifa_infante",  0) or 0)
+    cant_sencilla   = int(float(d.get("cant_sencilla", 0) or 0))
+    cant_doble      = int(float(d.get("cant_doble",    0) or 0))
+    cant_triple     = int(float(d.get("cant_triple",   0) or 0))
+    cant_nino       = int(float(d.get("cant_nino",     0) or 0))
+    cant_infante    = int(float(d.get("cant_infante",  0) or 0))
+    tours           = [float(x) for x in d.get("tours",      [0]*5)]
     asistencia      = [float(x) for x in d.get("asistencia", [0]*5)]
-    equipaje        = [float(x) for x in d.get("equipaje", [0]*5)]
+    equipaje        = [float(x) for x in d.get("equipaje",   [0]*5)]
     cuota_inicial   = float(d.get("cuota_inicial", 0) or 0)
-    num_cuotas      = int(d.get("num_cuotas", 1) or 1)
+    num_cuotas      = int(float(d.get("num_cuotas", 1) or 1))
+
+    # Director
+    director_nombre = d.get("director_nombre", "Yamile Segura")
+    director_cc     = d.get("director_cc",     "28905071")
+    director_cel    = d.get("director_cel",    "3176464693")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
@@ -182,49 +186,50 @@ def generar_liquidacion():
         wb = openpyxl.load_workbook(xlsx_out)
         ws = wb.active
 
-        # Usando celdas principales de los rangos fusionados
         cell_map = {
             "G1":  d.get("num_rsv_h", ""),
             "G2":  d.get("num_rsv_v", ""),
+            # Director (fila 5)
+            "D5":  director_nombre,
+            "E5":  director_cc,
+            "G5":  director_cel,
+            # Asesor (fila 6)
             "D6":  d.get("asesor", ""),
             "G6":  d.get("celular", ""),
+            # Fecha RSV y ciudad (fila 7)
             "D7":  fmt_fecha(d.get("fecha_rsv", "")),
             "G7":  d.get("ciudad", ""),
+            # Datos cliente
             "D9":  d.get("titular", ""),
             "G9":  d.get("celular", ""),
             "D10": d.get("documento", ""),
             "G11": d.get("correo", ""),
+            # Servicios
             "D13": d.get("origen", ""),
             "G13": d.get("destino", ""),
             "D14": fmt_fecha(d.get("fecha_ida", "")),
             "G14": fmt_fecha(d.get("fecha_regreso", "")),
-            "D15": int(d.get("adultos", 0) or 0),
-            "F15": int(d.get("ninos", 0) or 0),
-            "H15": int(d.get("infantes", 0) or 0),
+            "D15": int(float(d.get("adultos",  0) or 0)),
+            "F15": int(float(d.get("ninos",    0) or 0)),
+            "H15": int(float(d.get("infantes", 0) or 0)),
             "D16": d.get("hotel", ""),
             "E17": d.get("noches", 0),
             "G17": d.get("tipo_vuelo", "Comercial"),
             # Cantidades habitaciones
-            "D19": cant_sencilla,
-            "E19": cant_doble,
-            "F19": cant_triple,
-            "G19": cant_nino,
-            "H19": cant_infante,
-            # Tarifas por acomodación
-            "D21": tarifa_sencilla,
-            "E21": tarifa_doble,
-            "F21": tarifa_triple,
-            "G21": tarifa_nino,
-            "H21": tarifa_infante,
+            "D19": cant_sencilla, "E19": cant_doble,
+            "F19": cant_triple,   "G19": cant_nino, "H19": cant_infante,
+            # Tarifas
+            "D21": tarifa_sencilla, "E21": tarifa_doble,
+            "F21": tarifa_triple,   "G21": tarifa_nino, "H21": tarifa_infante,
             # Tours
             "D22": tours[0], "E22": tours[1], "F22": tours[2],
             "G22": tours[3], "H22": tours[4],
-            # Asistencia médica
+            # Asistencia
             "D23": asistencia[0], "E23": asistencia[1], "F23": asistencia[2],
             "G23": asistencia[3], "H23": asistencia[4],
             # Equipaje
             "D24": equipaje[0], "E24": equipaje[1],
-            "F24": equipaje[2],  "H24": equipaje[4] if len(equipaje) > 4 else 0,
+            "F24": equipaje[2],  "H24": equipaje[4] if len(equipaje)>4 else 0,
             # Cantidad personas
             "D25": cant_sencilla, "E25": cant_doble,
             "F25": cant_triple,   "G25": cant_nino, "H25": cant_infante,
@@ -236,7 +241,7 @@ def generar_liquidacion():
         for ref, val in cell_map.items():
             safe_set(ws, ref, val)
 
-        # Total y letras
+        # Total
         total = (tarifa_sencilla*cant_sencilla + tarifa_doble*cant_doble +
                  tarifa_triple*cant_triple + tarifa_nino*cant_nino +
                  tarifa_infante*cant_infante)
@@ -244,14 +249,15 @@ def generar_liquidacion():
             total = float(d.get("valor_total", 0) or 0)
 
         safe_set(ws, "D28", pesos_en_letras(total))
+        # Saldo siempre positivo
+        saldo = max(0.0, total - cuota_inicial)
+        safe_set(ws, "H30", saldo)
 
-        # Pasajeros — filas 35 en adelante
-        pasajeros = d.get("pasajeros", [])
-        for i, p in enumerate(pasajeros[:10]):
+        # Pasajeros — filas 36+
+        for i, p in enumerate(d.get("pasajeros", [])[:10]):
             fila = 36 + i
             safe_set(ws, f"B{fila}", str(i+1))
             safe_set(ws, f"C{fila}", p.get("nombre", ""))
-            safe_set(ws, f"D{fila}", "")
             safe_set(ws, f"F{fila}", p.get("doc", ""))
 
         wb.save(xlsx_out)
