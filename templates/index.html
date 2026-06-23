@@ -25,8 +25,6 @@
     min-height: 100vh;
     color: #1e293b;
   }
-
-  /* ─── Header ─── */
   header {
     background: var(--azul);
     color: #fff;
@@ -46,177 +44,81 @@
   }
   header h1 { font-size: 1.4rem; font-weight: 700; }
   header p  { font-size: .85rem; opacity: .75; margin-top: 2px; }
-
-  /* ─── Layout ─── */
-  main {
-    max-width: 960px;
-    margin: 32px auto;
-    padding: 0 20px 60px;
-  }
-
-  /* ─── Secciones ─── */
-  .card {
-    background: #fff;
-    border-radius: var(--radio);
-    box-shadow: var(--sombra);
-    margin-bottom: 24px;
-    overflow: hidden;
-  }
+  main { max-width: 960px; margin: 32px auto; padding: 0 20px 60px; }
+  .card { background: #fff; border-radius: var(--radio); box-shadow: var(--sombra); margin-bottom: 24px; overflow: hidden; }
   .card-header {
-    background: var(--azul);
-    color: #fff;
-    padding: 14px 22px;
-    font-size: .95rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    background: var(--azul); color: #fff;
+    padding: 14px 22px; font-size: .95rem; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
   }
   .card-header .icon {
-    background: var(--aqua);
-    color: var(--azul);
-    border-radius: 6px;
-    width: 28px; height: 28px;
+    background: var(--aqua); color: var(--azul);
+    border-radius: 6px; width: 28px; height: 28px;
     display: flex; align-items: center; justify-content: center;
     font-size: 14px; font-weight: 900;
   }
   .card-body { padding: 22px; }
-
-  /* ─── Grid campos ─── */
   .grid { display: grid; gap: 16px; }
   .grid-2 { grid-template-columns: 1fr 1fr; }
   .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
-  @media(max-width:640px){
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-  }
-
-  /* ─── Campos ─── */
+  .grid-5 { grid-template-columns: repeat(5,1fr); }
+  @media(max-width:640px){ .grid-2,.grid-3,.grid-5 { grid-template-columns: 1fr; } }
   .field { display: flex; flex-direction: column; gap: 5px; }
   label { font-size: .82rem; font-weight: 600; color: var(--gris-t); text-transform: uppercase; letter-spacing: .04em; }
   input, select, textarea {
-    border: 1.5px solid var(--gris);
-    border-radius: 7px;
-    padding: 9px 12px;
-    font-size: .95rem;
-    color: #1e293b;
-    transition: border-color .2s, box-shadow .2s;
-    background: var(--blanco);
+    border: 1.5px solid var(--gris); border-radius: 7px;
+    padding: 9px 12px; font-size: .95rem; color: #1e293b;
+    transition: border-color .2s, box-shadow .2s; background: var(--blanco);
   }
   input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--aqua);
+    outline: none; border-color: var(--aqua);
     box-shadow: 0 0 0 3px rgba(0,180,216,.15);
   }
-  textarea { resize: vertical; min-height: 70px; }
   .required::after { content: " *"; color: var(--rojo); }
-
-  /* ─── Pasajeros ─── */
   .pax-list { display: flex; flex-direction: column; gap: 10px; }
-  .pax-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 10px;
-    align-items: end;
-  }
-  .btn-remove {
-    background: #fee2e2;
-    border: none; border-radius: 7px;
-    color: var(--rojo);
-    padding: 9px 13px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background .15s;
-  }
+  .pax-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+  .btn-remove { background: #fee2e2; border: none; border-radius: 7px; color: var(--rojo); padding: 9px 13px; cursor: pointer; font-size: 16px; }
   .btn-remove:hover { background: #fca5a5; }
   #btn-add-pax {
-    margin-top: 10px;
-    background: #eff6ff;
-    border: 1.5px dashed var(--azul-med);
-    border-radius: 7px;
-    color: var(--azul-med);
-    padding: 9px 18px;
-    cursor: pointer;
-    font-size: .9rem;
-    font-weight: 600;
-    transition: background .15s;
+    margin-top: 10px; background: #eff6ff;
+    border: 1.5px dashed var(--azul-med); border-radius: 7px;
+    color: var(--azul-med); padding: 9px 18px; cursor: pointer;
+    font-size: .9rem; font-weight: 600;
   }
   #btn-add-pax:hover { background: #dbeafe; }
-
-  /* ─── Acciones ─── */
-  .actions {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-top: 28px;
-  }
+  .actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 28px; }
   .btn {
-    flex: 1;
-    min-width: 200px;
-    padding: 14px 24px;
-    border: none;
-    border-radius: var(--radio);
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    flex: 1; min-width: 200px; padding: 14px 24px;
+    border: none; border-radius: var(--radio);
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
     transition: transform .15s, box-shadow .15s, opacity .15s;
   }
   .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.15); }
-  .btn:active { transform: translateY(0); }
-  .btn-contrato {
-    background: linear-gradient(135deg, var(--azul) 0%, var(--azul-med) 100%);
-    color: #fff;
-  }
-  .btn-liquidacion {
-    background: linear-gradient(135deg, #0d7a5f 0%, #2d9d79 100%);
-    color: #fff;
-  }
-  .btn-ambos {
-    background: linear-gradient(135deg, var(--aqua) 0%, #0096c7 100%);
-    color: var(--azul);
-    flex: 100%;
-  }
+  .btn-contrato  { background: linear-gradient(135deg, var(--azul) 0%, var(--azul-med) 100%); color: #fff; }
+  .btn-liquidacion { background: linear-gradient(135deg, #0d7a5f 0%, #2d9d79 100%); color: #fff; }
+  .btn-ambos { background: linear-gradient(135deg, var(--aqua) 0%, #0096c7 100%); color: var(--azul); flex: 100%; }
   .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
-
-  /* ─── Toast ─── */
   #toast {
-    position: fixed;
-    bottom: 28px; left: 50%;
+    position: fixed; bottom: 28px; left: 50%;
     transform: translateX(-50%) translateY(80px);
-    background: var(--verde);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: .95rem;
+    background: var(--verde); color: #fff;
+    padding: 12px 24px; border-radius: 50px;
+    font-weight: 600; font-size: .95rem;
     box-shadow: 0 4px 20px rgba(0,0,0,.2);
     transition: transform .3s cubic-bezier(.34,1.56,.64,1);
     z-index: 999;
-    white-space: nowrap;
   }
   #toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* ─── Nota del valor ─── */
-  .valor-nota {
-    font-size: .8rem;
-    color: var(--gris-t);
-    margin-top: 4px;
-  }
-  .letras-preview {
-    font-size: .82rem;
-    color: var(--azul-med);
-    font-style: italic;
-    min-height: 18px;
-    margin-top: 2px;
-  }
-  .separador {
-    border: none;
-    border-top: 1.5px solid var(--gris);
-    margin: 18px 0;
-  }
+  .valor-nota { font-size: .8rem; color: var(--gris-t); margin-top: 4px; }
+  .letras-preview { font-size: .82rem; color: var(--azul-med); font-style: italic; min-height: 18px; margin-top: 2px; }
+  .separador { border: none; border-top: 1.5px solid var(--gris); margin: 18px 0; }
+  .tabla-acomod { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .88rem; }
+  .tabla-acomod th { background: var(--azul); color: #fff; padding: 8px 10px; text-align: center; font-size: .8rem; }
+  .tabla-acomod td { padding: 6px 8px; border: 1px solid var(--gris); }
+  .tabla-acomod td:first-child { font-weight: 600; color: var(--gris-t); font-size: .8rem; background: #f8fafc; }
+  .tabla-acomod input { border: none; background: transparent; text-align: right; width: 100%; padding: 4px; font-size: .9rem; }
+  .tabla-acomod input:focus { outline: 2px solid var(--aqua); border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -233,10 +135,7 @@
 
   <!-- 1. Datos del titular -->
   <div class="card">
-    <div class="card-header">
-      <div class="icon">1</div>
-      Datos del Titular de la Reserva
-    </div>
+    <div class="card-header"><div class="icon">1</div> Datos del Titular de la Reserva</div>
     <div class="card-body">
       <div class="grid grid-2">
         <div class="field">
@@ -255,13 +154,41 @@
           <label for="correo">Correo electrónico</label>
           <input type="email" id="correo" placeholder="correo@ejemplo.com">
         </div>
+
+        <!-- DIRECTOR: seleccionable -->
+        <div class="field">
+          <label for="director_sel">Directora Comercial</label>
+          <select id="director_sel" onchange="actualizarDirector()">
+            <option value="Yamile Segura|28905071|3176464693">Yamile Segura</option>
+            <option value="otro">✏️ Otro (escribir manualmente)</option>
+          </select>
+        </div>
         <div class="field">
           <label for="asesor">Asesor</label>
-          <input type="text" id="asesor" placeholder="Nombre del asesor" value="Yamile Segura">
+          <input type="text" id="asesor" placeholder="Nombre del asesor">
         </div>
+
+        <!-- Campos director manual (ocultos por defecto) -->
+        <div class="field" id="director_manual_nombre_field" style="display:none">
+          <label for="director_nombre">Nombre Directora (manual)</label>
+          <input type="text" id="director_nombre" placeholder="Nombre completo">
+        </div>
+        <div class="field" id="director_manual_cc_field" style="display:none">
+          <label for="director_cc">Cédula Directora</label>
+          <input type="text" id="director_cc" placeholder="Número de cédula">
+        </div>
+        <div class="field" id="director_manual_cel_field" style="display:none">
+          <label for="director_cel">Celular Directora</label>
+          <input type="text" id="director_cel" placeholder="3XX XXX XXXX">
+        </div>
+
         <div class="field">
           <label for="fecha_rsv">Fecha de reserva</label>
           <input type="date" id="fecha_rsv">
+        </div>
+        <div class="field">
+          <label for="ciudad">Ciudad</label>
+          <input type="text" id="ciudad" placeholder="Ej: Bogotá" value="Bogotá">
         </div>
       </div>
     </div>
@@ -269,10 +196,7 @@
 
   <!-- 2. Servicios contratados -->
   <div class="card">
-    <div class="card-header">
-      <div class="icon">2</div>
-      Servicios Contratados
-    </div>
+    <div class="card-header"><div class="icon">2</div> Servicios Contratados</div>
     <div class="card-body">
       <div class="grid grid-2">
         <div class="field">
@@ -338,39 +262,91 @@
           </select>
         </div>
       </div>
+
+      <hr class="separador">
+
+      <!-- TABLA DE ACOMODACIÓN Y TARIFAS -->
+      <label style="display:block;margin-bottom:8px;">Cantidades y Tarifas por Acomodación</label>
+      <table class="tabla-acomod">
+        <thead>
+          <tr>
+            <th style="width:180px">Concepto</th>
+            <th>Sencilla</th>
+            <th>Doble</th>
+            <th>Triple</th>
+            <th>Niño</th>
+            <th>Infante</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cant. Habitaciones</td>
+            <td><input type="number" id="cant_sencilla" min="0" value="0"></td>
+            <td><input type="number" id="cant_doble"    min="0" value="1"></td>
+            <td><input type="number" id="cant_triple"   min="0" value="0"></td>
+            <td><input type="number" id="cant_nino"     min="0" value="0"></td>
+            <td><input type="number" id="cant_infante"  min="0" value="0"></td>
+          </tr>
+          <tr>
+            <td>Tarifa por persona ($)</td>
+            <td><input type="number" id="tarifa_sencilla" min="0" value="0" oninput="calcularTotal()"></td>
+            <td><input type="number" id="tarifa_doble"    min="0" value="0" oninput="calcularTotal()"></td>
+            <td><input type="number" id="tarifa_triple"   min="0" value="0" oninput="calcularTotal()"></td>
+            <td><input type="number" id="tarifa_nino"     min="0" value="0" oninput="calcularTotal()"></td>
+            <td><input type="number" id="tarifa_infante"  min="0" value="0" oninput="calcularTotal()"></td>
+          </tr>
+          <tr>
+            <td>Tours adicionales ($)</td>
+            <td><input type="number" id="tours_0" min="0" value="0"></td>
+            <td><input type="number" id="tours_1" min="0" value="0"></td>
+            <td><input type="number" id="tours_2" min="0" value="0"></td>
+            <td><input type="number" id="tours_3" min="0" value="0"></td>
+            <td><input type="number" id="tours_4" min="0" value="0"></td>
+          </tr>
+          <tr>
+            <td>Asistencia médica ($)</td>
+            <td><input type="number" id="asist_0" min="0" value="0"></td>
+            <td><input type="number" id="asist_1" min="0" value="0"></td>
+            <td><input type="number" id="asist_2" min="0" value="0"></td>
+            <td><input type="number" id="asist_3" min="0" value="0"></td>
+            <td><input type="number" id="asist_4" min="0" value="0"></td>
+          </tr>
+          <tr>
+            <td>Equipaje adicional ($)</td>
+            <td><input type="number" id="equip_0" min="0" value="0"></td>
+            <td><input type="number" id="equip_1" min="0" value="0"></td>
+            <td><input type="number" id="equip_2" min="0" value="0"></td>
+            <td><input type="number" id="equip_3" min="0" value="0"></td>
+            <td><input type="number" id="equip_4" min="0" value="0"></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
   <!-- 3. Pasajeros -->
   <div class="card">
-    <div class="card-header">
-      <div class="icon">3</div>
-      Lista de Pasajeros
-    </div>
+    <div class="card-header"><div class="icon">3</div> Lista de Pasajeros</div>
     <div class="card-body">
-      <div class="pax-list" id="pax-list">
-        <!-- se genera dinámicamente -->
-      </div>
+      <div class="pax-list" id="pax-list"></div>
       <button id="btn-add-pax" type="button">+ Agregar pasajero</button>
     </div>
   </div>
 
   <!-- 4. Valores -->
   <div class="card">
-    <div class="card-header">
-      <div class="icon">4</div>
-      Condiciones Económicas
-    </div>
+    <div class="card-header"><div class="icon">4</div> Condiciones Económicas</div>
     <div class="card-body">
       <div class="grid grid-2">
         <div class="field">
           <label class="required" for="valor_total">Valor total del contrato ($)</label>
-          <input type="number" id="valor_total" min="0" step="1000" placeholder="0" oninput="actualizarLetras()">
+          <input type="number" id="valor_total" min="0" step="1000" placeholder="0" oninput="actualizarLetras(); actualizarCuotaInicial();">
           <div class="letras-preview" id="valor_letras"></div>
+          <div class="valor-nota">Se calcula automáticamente con las tarifas de acomodación</div>
         </div>
         <div class="field">
           <label for="cuota_inicial">Cuota inicial (30%)</label>
-          <input type="number" id="cuota_inicial" min="0" step="1000" placeholder="0">
+          <input type="number" id="cuota_inicial" min="0" step="1000" placeholder="0" oninput="calcularCuota()">
           <div class="valor-nota">Se calcula automáticamente al ingresar el total</div>
         </div>
         <div class="field">
@@ -387,128 +363,141 @@
 
   <!-- Botones -->
   <div class="actions">
-    <button class="btn btn-contrato" onclick="descargar('contrato')">
-      📄 Descargar Contrato (.pdf)
-    </button>
-    <button class="btn btn-liquidacion" onclick="descargar('liquidacion')">
-      📊 Descargar Liquidación (.pdf)
-    </button>
-    <button class="btn btn-ambos" onclick="descargarAmbos()">
-      ⚡ Generar los Dos PDFs
-    </button>
+    <button class="btn btn-contrato"    onclick="descargar('contrato')">📄 Descargar Contrato (.pdf)</button>
+    <button class="btn btn-liquidacion" onclick="descargar('liquidacion')">📊 Descargar Liquidación (.pdf)</button>
+    <button class="btn btn-ambos"       onclick="descargarAmbos()">⚡ Generar los Dos PDFs</button>
   </div>
 
 </main>
 
-<div id="toast">✅ Documento generado con éxito</div>
+<div id="toast"></div>
 
 <script>
-// ── Número a letras (preview) ─────────────────────────────────────────────
+// ── Número a letras ────────────────────────────────────────────────────────
 const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve',
   'diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve'];
 const decenas  = ['','diez','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+function centenas(n){
+  if(n===100) return 'cien';
+  const c=Math.floor(n/100);
+  const r=n%100;
+  const prefijos=['','ciento','doscientos','trescientos','cuatrocientos','quinientos',
+                  'seiscientos','setecientos','ochocientos','novecientos'];
+  return (prefijos[c]+(r?' '+miles(r):'')).trim();
+}
+function miles(n){
+  if(n<20) return unidades[n];
+  if(n<100){ const d=Math.floor(n/10),u=n%10; return decenas[d]+(u?' y '+unidades[u]:''); }
+  if(n<1000) return centenas(n);
+  if(n<2000) return 'mil'+(n%1000?' '+miles(n%1000):'');
+  if(n<1000000){ const m=Math.floor(n/1000); return miles(m)+' mil'+(n%1000?' '+miles(n%1000):''); }
+  if(n<2000000) return 'un millón'+(n%1000000?' '+miles(n%1000000):'');
+  const m=Math.floor(n/1000000); return miles(m)+' millones'+(n%1000000?' '+miles(n%1000000):'');
+}
+function numLetras(n){ return n===0?'cero':miles(Math.round(n)); }
 
-function numLetras(n) {
-  n = parseInt(n) || 0;
-  if (n === 0) return 'cero';
-  if (n < 0) return 'menos ' + numLetras(-n);
-  let r = '';
-  if (n >= 1000000) {
-    const m = Math.floor(n / 1000000);
-    r += (m === 1 ? 'un millón' : numLetras(m) + ' millones') + ' ';
-    n %= 1000000;
-  }
-  if (n >= 1000) {
-    const m = Math.floor(n / 1000);
-    r += (m === 1 ? 'mil' : numLetras(m) + ' mil') + ' ';
-    n %= 1000;
-  }
-  if (n >= 100) {
-    const c = Math.floor(n / 100);
-    const cMap = ['','cien','doscientos','trescientos','cuatrocientos','quinientos',
-      'seiscientos','setecientos','ochocientos','novecientos'];
-    if (n === 100) { r += 'cien'; n = 0; }
-    else { r += cMap[c] + ' '; n %= 100; }
-  }
-  if (n > 0) {
-    if (n < 20) { r += unidades[n]; }
-    else {
-      r += decenas[Math.floor(n/10)];
-      if (n % 10) r += ' y ' + unidades[n % 10];
-    }
-  }
-  return r.trim().replace(/\s+/g,' ');
+function actualizarLetras(){
+  const v = parseFloat(document.getElementById('valor_total').value) || 0;
+  document.getElementById('valor_letras').textContent =
+    v > 0 ? numLetras(v).toUpperCase() + ' PESOS M/CTE' : '';
 }
 
-function actualizarLetras() {
-  const v = parseFloat(document.getElementById('valor_total').value) || 0;
-  document.getElementById('valor_letras').textContent = v > 0
-    ? numLetras(v).toUpperCase() + ' PESOS M/CTE'
-    : '';
-  // Auto cuota inicial 30%
+// ── Calcular total desde tabla de tarifas ──────────────────────────────────
+function calcularTotal(){
+  const ts = parseFloat(document.getElementById('tarifa_sencilla').value)||0;
+  const td = parseFloat(document.getElementById('tarifa_doble').value)||0;
+  const tt = parseFloat(document.getElementById('tarifa_triple').value)||0;
+  const tn = parseFloat(document.getElementById('tarifa_nino').value)||0;
+  const ti = parseFloat(document.getElementById('tarifa_infante').value)||0;
+  const cs = parseFloat(document.getElementById('cant_sencilla').value)||0;
+  const cd = parseFloat(document.getElementById('cant_doble').value)||0;
+  const ct = parseFloat(document.getElementById('cant_triple').value)||0;
+  const cn = parseFloat(document.getElementById('cant_nino').value)||0;
+  const ci = parseFloat(document.getElementById('cant_infante').value)||0;
+  const total = ts*cs + td*cd + tt*ct + tn*cn + ti*ci;
+  if(total > 0){
+    document.getElementById('valor_total').value = total;
+    actualizarLetras();
+    actualizarCuotaInicial();
+  }
+}
+
+function actualizarCuotaInicial(){
+  const total = parseFloat(document.getElementById('valor_total').value)||0;
   const ci = document.getElementById('cuota_inicial');
-  if (!ci.dataset.manual) ci.value = Math.round(v * 0.3);
+  if(total > 0) ci.value = Math.round(total * 0.30);
   calcularCuota();
 }
 
-function calcularCuota() {
-  const total   = parseFloat(document.getElementById('valor_total').value)    || 0;
-  const inicial = parseFloat(document.getElementById('cuota_inicial').value) || 0;
-  const cuotas  = parseInt(document.getElementById('num_cuotas').value)       || 1;
-  const saldo   = total - inicial;
+function calcularCuota(){
+  const total   = parseFloat(document.getElementById('valor_total').value)||0;
+  const inicial = parseFloat(document.getElementById('cuota_inicial').value)||0;
+  const cuotas  = parseInt(document.getElementById('num_cuotas').value)||1;
+  const saldo   = Math.max(0, total - inicial);
   document.getElementById('valor_cuota').value = cuotas > 0 ? Math.round(saldo / cuotas) : 0;
 }
 
-document.getElementById('cuota_inicial').addEventListener('input', function() {
-  this.dataset.manual = '1';
-  calcularCuota();
-});
+// ── Director: selección o manual ──────────────────────────────────────────
+const DIRECTORAS = {
+  'Yamile Segura|28905071|3176464693': { nombre:'Yamile Segura', cc:'28905071', cel:'3176464693' },
+};
+
+function actualizarDirector(){
+  const val = document.getElementById('director_sel').value;
+  const manual = val === 'otro';
+  document.getElementById('director_manual_nombre_field').style.display = manual ? '' : 'none';
+  document.getElementById('director_manual_cc_field').style.display    = manual ? '' : 'none';
+  document.getElementById('director_manual_cel_field').style.display   = manual ? '' : 'none';
+}
+
+function getDirData(){
+  const val = document.getElementById('director_sel').value;
+  if(val === 'otro'){
+    return {
+      nombre: document.getElementById('director_nombre').value.trim(),
+      cc:     document.getElementById('director_cc').value.trim(),
+      cel:    document.getElementById('director_cel').value.trim(),
+    };
+  }
+  const parts = val.split('|');
+  return { nombre: parts[0], cc: parts[1], cel: parts[2] };
+}
 
 // ── Pasajeros ─────────────────────────────────────────────────────────────
 let paxCount = 0;
-
-function agregarPasajero(nombre='', doc='') {
+function addPax(){
   paxCount++;
   const div = document.createElement('div');
   div.className = 'pax-row';
-  div.dataset.id = paxCount;
+  div.id = 'pax-' + paxCount;
   div.innerHTML = `
     <div class="field">
       <label>Pasajero ${paxCount} — Nombre completo</label>
-      <input type="text" class="pax-nombre" value="${nombre}" placeholder="Nombres y apellidos">
+      <input class="pax-nombre" type="text" placeholder="Nombres y apellidos">
     </div>
     <div class="field">
       <label>N° Documento</label>
-      <input type="text" class="pax-doc" value="${doc}" placeholder="Documento de identidad">
+      <input class="pax-doc" type="text" placeholder="CC / CE">
     </div>
-    <button class="btn-remove" onclick="this.parentElement.remove(); recontarPax()" title="Eliminar">✕</button>
+    <button class="btn-remove" onclick="document.getElementById('pax-${paxCount}').remove()">✕</button>
   `;
   document.getElementById('pax-list').appendChild(div);
 }
+document.getElementById('btn-add-pax').onclick = addPax;
 
-function recontarPax() {
-  document.querySelectorAll('.pax-row').forEach((row, i) => {
-    row.querySelector('label').textContent = `Pasajero ${i+1} — Nombre completo`;
-  });
-}
-
-document.getElementById('btn-add-pax').addEventListener('click', () => agregarPasajero());
-
-// Inicializar con 2 pasajeros
-agregarPasajero();
-agregarPasajero();
-
-// Fecha de reserva: hoy
+// ── Fecha hoy ─────────────────────────────────────────────────────────────
 document.getElementById('fecha_rsv').valueAsDate = new Date();
 
-// ── Recopilar datos ────────────────────────────────────────────────────────
-function recopilarDatos() {
+// ── Recopilar datos ───────────────────────────────────────────────────────
+function recopilarDatos(){
   const pasajeros = [];
   document.querySelectorAll('.pax-row').forEach(row => {
     const nombre = row.querySelector('.pax-nombre').value.trim();
     const doc    = row.querySelector('.pax-doc').value.trim();
-    if (nombre) pasajeros.push({ nombre, doc });
+    if(nombre) pasajeros.push({ nombre, doc });
   });
+
+  const dir = getDirData();
 
   return {
     titular:       document.getElementById('titular').value.trim(),
@@ -516,7 +505,11 @@ function recopilarDatos() {
     celular:       document.getElementById('celular').value.trim(),
     correo:        document.getElementById('correo').value.trim(),
     asesor:        document.getElementById('asesor').value.trim(),
+    director_nombre: dir.nombre,
+    director_cc:     dir.cc,
+    director_cel:    dir.cel,
     fecha_rsv:     document.getElementById('fecha_rsv').value,
+    ciudad:        document.getElementById('ciudad').value.trim(),
     origen:        document.getElementById('origen').value.trim(),
     destino:       document.getElementById('destino').value.trim(),
     fecha_ida:     document.getElementById('fecha_ida').value,
@@ -528,6 +521,19 @@ function recopilarDatos() {
     infantes:      document.getElementById('infantes').value,
     acomodacion:   document.getElementById('acomodacion').value,
     tipo_vuelo:    document.getElementById('tipo_vuelo').value,
+    cant_sencilla: document.getElementById('cant_sencilla').value,
+    cant_doble:    document.getElementById('cant_doble').value,
+    cant_triple:   document.getElementById('cant_triple').value,
+    cant_nino:     document.getElementById('cant_nino').value,
+    cant_infante:  document.getElementById('cant_infante').value,
+    tarifa_sencilla: document.getElementById('tarifa_sencilla').value,
+    tarifa_doble:    document.getElementById('tarifa_doble').value,
+    tarifa_triple:   document.getElementById('tarifa_triple').value,
+    tarifa_nino:     document.getElementById('tarifa_nino').value,
+    tarifa_infante:  document.getElementById('tarifa_infante').value,
+    tours:      [0,1,2,3,4].map(i => parseFloat(document.getElementById('tours_'+i).value)||0),
+    asistencia: [0,1,2,3,4].map(i => parseFloat(document.getElementById('asist_'+i).value)||0),
+    equipaje:   [0,1,2,3,4].map(i => parseFloat(document.getElementById('equip_'+i).value)||0),
     valor_total:   document.getElementById('valor_total').value,
     cuota_inicial: document.getElementById('cuota_inicial').value,
     num_cuotas:    document.getElementById('num_cuotas').value,
@@ -536,17 +542,17 @@ function recopilarDatos() {
   };
 }
 
-function validar(datos) {
-  if (!datos.titular) { alert('⚠️ Por favor ingresa el nombre del titular.'); return false; }
-  if (!datos.documento) { alert('⚠️ Por favor ingresa el documento del titular.'); return false; }
-  if (!datos.destino) { alert('⚠️ Por favor ingresa el destino.'); return false; }
+function validar(datos){
+  if(!datos.titular)  { alert('⚠️ Por favor ingresa el nombre del titular.'); return false; }
+  if(!datos.documento){ alert('⚠️ Por favor ingresa el documento del titular.'); return false; }
+  if(!datos.destino)  { alert('⚠️ Por favor ingresa el destino.'); return false; }
   return true;
 }
 
-// ── Descarga ───────────────────────────────────────────────────────────────
-async function descargar(tipo) {
+// ── Descarga ──────────────────────────────────────────────────────────────
+async function descargar(tipo){
   const datos = recopilarDatos();
-  if (!validar(datos)) return;
+  if(!validar(datos)) return;
 
   const url = tipo === 'contrato' ? '/contrato' : '/liquidacion';
   const btn = document.querySelectorAll('.btn')[tipo === 'contrato' ? 0 : 1];
@@ -559,7 +565,7 @@ async function descargar(tipo) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(datos)
     });
-    if (!res.ok) throw new Error('Error en el servidor');
+    if(!res.ok) throw new Error('Error en el servidor');
     const blob = await res.blob();
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -575,19 +581,19 @@ async function descargar(tipo) {
   }
 }
 
-async function descargarAmbos() {
+async function descargarAmbos(){
   const datos = recopilarDatos();
-  if (!validar(datos)) return;
+  if(!validar(datos)) return;
   const btn = document.querySelector('.btn-ambos');
   btn.disabled = true;
   btn.textContent = '⏳ Generando documentos...';
   try {
     await Promise.all([
-      fetch('/contrato',    { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
-        .then(r => r.blob()).then(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Contrato_'+datos.titular+'.docx'; a.click(); }),
+      fetch('/contrato', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
+        .then(r => r.blob()).then(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Contrato_'+datos.titular+'.pdf'; a.click(); }),
       new Promise(r => setTimeout(r, 600)).then(() =>
         fetch('/liquidacion', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos) })
-          .then(r => r.blob()).then(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Liquidacion_'+datos.titular+'.xlsx'; a.click(); })
+          .then(r => r.blob()).then(b => { const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Liquidacion_'+datos.titular+'.pdf'; a.click(); })
       )
     ]);
     mostrarToast('✅ Ambos documentos generados');
@@ -599,12 +605,15 @@ async function descargarAmbos() {
   }
 }
 
-function mostrarToast(msg) {
+function mostrarToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
+
+// Agregar 2 pasajeros por defecto
+addPax(); addPax();
 </script>
 </body>
 </html>
